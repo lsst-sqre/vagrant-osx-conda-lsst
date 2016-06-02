@@ -9,8 +9,8 @@ Vagrant.configure(2) do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
-  #config.ssh.private_key_path = "/Users/jmatt/.ssh/id_rsa"
-  #config.ssh.insert_key = true
+  # config.ssh.private_key_path = "/Users/jmatt/.ssh/id_rsa"
+  # config.ssh.insert_key = true
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
@@ -50,7 +50,8 @@ Vagrant.configure(2) do |config|
   #   vb.gui = true
   #
   #   # Customize the amount of memory on the VM:
-    vb.memory = "4096"
+    vb.memory = "16384"
+    vb.cpus = 8
     file_to_disk = "./data/lsst_conda.vdi"
     unless File.exists?(file_to_disk)
       vb.customize ['createhd',
@@ -77,15 +78,19 @@ Vagrant.configure(2) do |config|
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
+  config.vm.provision "file", source: "~/.aws/config", destination: "~/.aws/config"
+  config.vm.provision "file", source: "~/.aws/credentials", destination: "~/.aws/credentials"
   config.vm.provision "shell", inline: <<-SHELL
-    diskutil partitionDisk /dev/disk0 gpt jhfsx lsst 0b
+    diskutil partitionDisk /dev/disk0 gpt hfsx lsst 0b
     diskutil mount /dev/disk0s2
     rm /usr/local/share/man/man1/brew-cask.1
     brew update
     brew upgrade
+    brew install awscli
     ln -s /Volumes/lsst /Users/vagrant/lsst
     git clone https://github.com/jmatt/conda-lsst.git /Users/vagrant/lsst/conda-lsst
     chown -R vagrant:staff /Volumes/lsst
-    chown vagrant:staff /Users/vagrant/lsst
+    chown -R vagrant:staff /Users/vagrant/lsst
+    chown -R vagrant:admin /usr/local
   SHELL
 end
